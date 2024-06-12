@@ -16,11 +16,16 @@ import {
   BotMessage,
   SystemMessage,
   Stock,
+  //Rentals
+  //Lots
   Purchase
 } from '@/components/stocks'
+//from '@/components/rentals'
+//from '@/components/lots'
 
 import { z } from 'zod'
 import { EventsSkeleton } from '@/components/stocks/events-skeleton'
+import { EventsSkeleton } from '@/components/rentals/events-skeleton'
 import { Events } from '@/components/stocks/events'
 import { StocksSkeleton } from '@/components/stocks/stocks-skeleton'
 import { Stocks } from '@/components/stocks/stocks'

@@ -36,6 +36,7 @@ export function ChatPanel({
   const [shareDialogOpen, setShareDialogOpen] = React.useState(false)
   const [currentQuestionId, setCurrentQuestionId] = React.useState('')
   const [currentScenario, setCurrentScenario] = React.useState(null);
+  const [answers, setAnswers] = React.useState({});
 
   const initialScenarioSelection = [
     {
@@ -50,9 +51,21 @@ export function ChatPanel({
     }
   ]
 
+  React.useEffect(() => {
+    console.log(answers);
+  }, [answers]);
+
   const handleOptionChange = (questionId: any, option: any) => {
     const nextQuestionId = promptQuestion[currentScenario].scenarios[0].questions.find(q => q.id === questionId).next?.[option] || promptQuestion[currentScenario].scenarios[0].questions.find(q => q.id === questionId).next?.default
     setCurrentQuestionId(nextQuestionId);
+
+    if (!answers[questionId]) {
+      setAnswers({
+        scenario: currentScenario,
+        ...answers,
+        [questionId]: option
+      })
+    };
   };
 
   const renderQuestions = (questions, questionId) => {

@@ -1,6 +1,6 @@
 export const promptQuestion = {
   renter: {
-    scenarios: [
+    scenarios:
       {
         question: "I WANT TO RENT",
         questions: [
@@ -77,11 +77,10 @@ export const promptQuestion = {
             options: ["<$500", "<$1,000", "<$1,500", ">$2,000"],
           },
         ],
-      },
-    ],
+      }
   },
   builder: {
-    scenarios: [
+    scenarios:
       {
         question: "I WANT TO BUILD",
         questions: [
@@ -124,6 +123,5 @@ export const promptQuestion = {
           },
         ],
       },
-    ],
   },
 };

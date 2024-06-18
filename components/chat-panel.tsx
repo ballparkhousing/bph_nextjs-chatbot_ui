@@ -35,8 +35,8 @@ export function ChatPanel({
   const { submitUserMessage } = useActions()
   const [shareDialogOpen, setShareDialogOpen] = React.useState(false)
   const [currentQuestionId, setCurrentQuestionId] = React.useState('')
-  const [currentScenario, setCurrentScenario] = React.useState(null);
-  const [answers, setAnswers] = React.useState({});
+  const [currentScenario, setCurrentScenario] = React.useState(null)
+  const [answers, setAnswers] = React.useState({})
 
   const initialScenarioSelection = [
     {
@@ -52,12 +52,18 @@ export function ChatPanel({
   ]
 
   React.useEffect(() => {
-    console.log(answers);
-  }, [answers]);
+    console.log(answers)
+  }, [answers])
 
   const handleOptionChange = (questionId: any, option: any) => {
-    const nextQuestionId = promptQuestion[currentScenario].scenarios[0].questions.find(q => q.id === questionId).next?.[option] || promptQuestion[currentScenario].scenarios[0].questions.find(q => q.id === questionId).next?.default
-    setCurrentQuestionId(nextQuestionId);
+    const nextQuestionId =
+      promptQuestion[currentScenario].scenarios.questions.find(
+        q => q.id === questionId
+      ).next?.[option] ||
+      promptQuestion[currentScenario].scenarios.questions.find(
+        q => q.id === questionId
+      ).next?.default
+    setCurrentQuestionId(nextQuestionId)
 
     if (!answers[questionId]) {
       setAnswers({
@@ -65,25 +71,29 @@ export function ChatPanel({
         ...answers,
         [questionId]: option
       })
-    };
-  };
+    }
+  }
 
   const renderQuestions = (questions, questionId) => {
     const questionObj = questions.find(q => q.id === questionId)
     if (!questionObj) return null
 
-    const { question, options } = questionObj;
+    const { question, options } = questionObj
 
     return (
       <div className="mb-4">
         <p className="text-sm mb-2 font-semibold">{question}</p>
-          <div className="mb-4 grid grid-cols-2 gap-2 px-4 sm:px-0">
-            {options.map(option => (
-              <div key={option} onClick={() => handleOptionChange(questionId, option)} className={`cursor-pointer rounded-lg border bg-white p-4 hover:bg-zinc-50 dark:bg-zinc-950 dark:hover:bg-zinc-900`}>
-                <div className="text-sm font-semibold">{option}</div>
-              </div>
-            ))}
-          </div>
+        <div className="mb-4 grid grid-cols-2 gap-2 px-4 sm:px-0">
+          {options.map(option => (
+            <div
+              key={option}
+              onClick={() => handleOptionChange(questionId, option)}
+              className={`cursor-pointer rounded-lg border bg-white p-4 hover:bg-zinc-50 dark:bg-zinc-950 dark:hover:bg-zinc-900`}
+            >
+              <div className="text-sm font-semibold">{option}</div>
+            </div>
+          ))}
+        </div>
       </div>
     )
   }
@@ -96,28 +106,33 @@ export function ChatPanel({
       />
 
       <div className="mx-auto sm:max-w-2xl sm:px-4">
-          <div className={`${currentScenario !== null && 'hidden'} mb-4 grid grid-cols-2 gap-2 px-4 sm:px-0`}>            
-            {initialScenarioSelection.map(({scenario, heading, subheading}) => (
-              <div onClick={() => {
-                setCurrentScenario(scenario);
-                
-                if (currentScenario === null) {
-                  setCurrentQuestionId(promptQuestion[scenario].scenarios[0].questions[0].id);
-                }
-              }} 
-              className={`cursor-pointer rounded-lg border bg-white p-4 hover:bg-zinc-50 dark:bg-zinc-950 dark:hover:bg-zinc-900`}>
-                <div className="text-sm font-semibold">{heading}</div>
-                <div className="text-sm text-zinc-600">
-                  {subheading}
-                </div>
-              </div>
-              ))}
-          </div>
+        <div
+          className={`${currentScenario !== null && 'hidden'} mb-4 grid grid-cols-2 gap-2 px-4 sm:px-0`}
+        >
+          {initialScenarioSelection.map(({ scenario, heading, subheading }) => (
+            <div
+              onClick={() => {
+                setCurrentScenario(scenario)
 
-        {currentScenario && renderQuestions(
-            promptQuestion[currentScenario].scenarios[0].questions, currentQuestionId
-          )
-        }
+                if (currentScenario === null) {
+                  setCurrentQuestionId(
+                    promptQuestion[scenario].scenarios.questions[0].id
+                  )
+                }
+              }}
+              className={`cursor-pointer rounded-lg border bg-white p-4 hover:bg-zinc-50 dark:bg-zinc-950 dark:hover:bg-zinc-900`}
+            >
+              <div className="text-sm font-semibold">{heading}</div>
+              <div className="text-sm text-zinc-600">{subheading}</div>
+            </div>
+          ))}
+        </div>
+
+        {currentScenario &&
+          renderQuestions(
+            promptQuestion[currentScenario].scenarios.questions,
+            currentQuestionId
+          )}
 
         <div className="space-y-4 border-t bg-background px-4 py-2 shadow-lg sm:rounded-t-xl sm:border md:py-4">
           <PromptForm input={input} setInput={setInput} />

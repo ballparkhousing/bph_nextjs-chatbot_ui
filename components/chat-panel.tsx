@@ -1,4 +1,6 @@
+
 import * as React from 'react'
+import GoogleMapComponent from './GoogleMapComponent'; // Make sure to create this component
 
 import { shareChat } from '@/app/actions'
 import { Button } from '@/components/ui/button'
@@ -37,6 +39,8 @@ export function ChatPanel({
   const [currentQuestionId, setCurrentQuestionId] = React.useState('')
   const [currentScenario, setCurrentScenario] = React.useState(null);
   const [answers, setAnswers] = React.useState({});
+  const [showMap, setShowMap] = React.useState(false);
+  const [mapCoords, setMapCoords] = React.useState<{ lat: number, lng: number } | null>(null);
 
   const initialScenarioSelection = [
     {
@@ -55,6 +59,15 @@ export function ChatPanel({
     console.log(answers);
   }, [answers]);
 
+  const locations = {
+    UNIVERSITY: { lat: 53.5232, lng: -113.5263 },
+    DOWNTOWN: { lat:53.5444, lng: -113.4909},
+    SOUTHSIDE: { lat:53.4836, lng: -113.5222}
+    
+    // MACEWAN: { lat: 53.5444, lng: -113.4909 },
+    // Add more locations here
+  };
+
   const handleOptionChange = (questionId: any, option: any) => {
     const nextQuestionId = promptQuestion[currentScenario].scenarios[0].questions.find(q => q.id === questionId).next?.[option] || promptQuestion[currentScenario].scenarios[0].questions.find(q => q.id === questionId).next?.default
     setCurrentQuestionId(nextQuestionId);
@@ -66,7 +79,14 @@ export function ChatPanel({
         [questionId]: option
       })
     };
+
+    // Check if the selected option corresponds to a location
+    if (locations[option]) {
+      setMapCoords(locations[option]);
+      setShowMap(true);
+    }
   };
+
 
   const renderQuestions = (questions, questionId) => {
     const questionObj = questions.find(q => q.id === questionId)
@@ -98,7 +118,7 @@ export function ChatPanel({
       <div className="mx-auto sm:max-w-2xl sm:px-4">
           <div className={`${currentScenario !== null && 'hidden'} mb-4 grid grid-cols-2 gap-2 px-4 sm:px-0`}>            
             {initialScenarioSelection.map(({scenario, heading, subheading}) => (
-              <div onClick={() => {
+              <div key={scenario} onClick={() => {
                 setCurrentScenario(scenario);
                 
                 if (currentScenario === null) {
@@ -119,6 +139,11 @@ export function ChatPanel({
           )
         }
 
+        {/* Conditionally render the GoogleMapComponent */}
+        {showMap && mapCoords && (
+          <GoogleMapComponent lat={mapCoords.lat} lng={mapCoords.lng} zoom={15} />
+        )}
+
         <div className="space-y-4 border-t bg-background px-4 py-2 shadow-lg sm:rounded-t-xl sm:border md:py-4">
           <PromptForm input={input} setInput={setInput} />
           <FooterText className="hidden sm:block" />
@@ -127,3 +152,4 @@ export function ChatPanel({
     </div>
   )
 }
+

@@ -75,7 +75,19 @@ export const promptQuestion = {
             id: "monthly_budget",
             question: "WHAT IS YOUR MONTHLY BUDGET?",
             options: ["<$500", "<$1,000", "<$1,500", ">$2,000"],
+            next: {
+              default: "where_to_live",
+            },
           },
+          { id: "where_to_live",
+            question: "WHERE DO YOU WANT TO LIVE?",
+            options: ["UNIVERSITY", "DOWNTOWN", "SOUTHSIDE"],
+            next: {
+              default: "map",
+            },
+
+          }
+
         ],
       },
     ],

@@ -9,35 +9,10 @@ export const promptQuestion = {
             question: "ARE YOU NEW TO CANADA?",
             options: ["YES", "NO"],
             next: {
-              YES: "student_or_worker",
-              NO: "student_or_worker",
+              default: "single_or_family"
             },
           },
-          {
-            id: "student_or_worker",
-            question: "ARE YOU A STUDENT OR A WORKER?",
-            options: ["STUDENT", "WORKER"],
-            next: {
-              STUDENT: "what_school",
-              WORKER: "where_do_you_work",
-            },
-          },
-          {
-            id: "what_school",
-            question: "WHAT SCHOOL?",
-            options: ["UOFA", "MACEWAN UNIVERSITY"],
-            next: {
-              default: "single_or_family",
-            },
-          },
-          {
-            id: "where_do_you_work",
-            question: "WHERE DO YOU WORK?",
-            options: ["ROGERS PLACE", "CWB"],
-            next: {
-              default: "single_or_family",
-            },
-          },
+
           {
             id: "single_or_family",
             question: "ARE YOU SINGLE OR DO YOU HAVE A FAMILY?",
@@ -47,6 +22,7 @@ export const promptQuestion = {
               FAMILY: "family_members",
             },
           },
+          
           {
             id: "family_members",
             question: "HOW MANY FAMILY MEMBERS INCLUDING YOU?",
@@ -71,11 +47,78 @@ export const promptQuestion = {
               default: "monthly_budget",
             },
           },
+
           {
             id: "monthly_budget",
             question: "WHAT IS YOUR MONTHLY BUDGET?",
             options: ["<$500", "<$1,000", "<$1,500", ">$2,000"],
+            next: {
+              default: "student_or_worker",
+            },
           },
+
+          {
+            id: "student_or_worker",
+            question: "ARE YOU A STUDENT OR A WORKER?",
+            options: ["STUDENT", "WORKER"],
+            next: {
+              STUDENT: "what_school",
+              WORKER: "where_do_you_work",
+            },
+          },
+          {
+            id: "what_school",
+            question: "WHAT SCHOOL?",
+            options: ["UOFA", "MACEWAN_UNIVERSITY"],
+            next: {
+              UOFA: "where_to_live_uofa",
+              MACEWAN_UNIVERSITY : "where_to_live_mac"
+            },
+          },
+          {
+            id: "where_do_you_work",
+            question: "WHERE DO YOU WORK?",
+            options: ["ROGERS_PLACE", "CWB"],
+            next: {
+              ROGERS_PLACE: "where_to_live_work_rogers",
+              CWB: "where_to_live_work_cwb"
+            },
+          },
+          
+          { id: "where_to_live_uofa",
+            question: "WHERE DO YOU WANT TO LIVE?",
+            options: ["UNIVERSITY_UOFA", "DOWNTOWN", "SOUTHSIDE"],
+            next: {
+              default: "map",
+            },
+
+          },
+          { id: "where_to_live_mac",
+            question: "WHERE DO YOU WANT TO LIVE?",
+            options: ["UNIVERSITY_MACEWAN", "DOWNTOWN", "SOUTHSIDE"],
+            next: {
+              default: "map",
+            },
+
+          },
+
+          { id: "where_to_live_work_rogers",
+            question: "WHERE DO YOU WANT TO LIVE?",
+            options: ["ROGERS_AREA", "DOWNTOWN", "SOUTHSIDE"],
+            next: {
+              default: "map",
+            },
+
+          },
+          { id: "where_to_live_work_cwb",
+            question: "WHERE DO YOU WANT TO LIVE?",
+            options: ["CWB_AREA", "DOWNTOWN", "SOUTHSIDE"],
+            next: {
+              default: "map",
+            },
+
+          }
+
         ],
       },
     ],
@@ -90,23 +133,24 @@ export const promptQuestion = {
             question: "WHAT DO YOU WANT TO BUILD?",
             options: ["RESIDENTIAL", "COMMERCIAL", "INDUSTRIAL"],
             next: {
-              RESIDENTIAL: "kind_of_residential",
+              default: "kind_of_residential",
             },
           },
           {
             id: "kind_of_residential",
-            question: "WHAT KIND OF RESIDENTIAL BUILDING?",
-            options: [
-              "SINGLE FAMILY - ATTACHED OR SEMI-DETACHED",
-              "DUPLEX",
-              "ROW HOUSES",
-              "APARTMENTS",
-            ],
+            question: "WHAT KIND OF BUILDING?",
+            options: ["ATTACHED_OR_SEMI_DETACHED","APARTMENTS"],
             next: {
-              "SINGLE FAMILY - ATTACHED OR SEMI-DETACHED": "where_to_build",
-              DUPLEX: "where_to_build",
-              "ROW HOUSES": "where_to_build",
+              ATTACHED_OR_SEMI_DETACHED: "what_type",
               APARTMENTS: "apartment_type",
+            },
+          },
+          {
+            id: "what_type",
+            question: "DUPLEX OR ROW HOUSES?",
+            options: ["DUPLEX", "ROW HOUSES"],
+            next: {
+              default: "where_to_build",
             },
           },
           {
@@ -121,7 +165,18 @@ export const promptQuestion = {
             id: "where_to_build",
             question: "WHERE DO YOU WANT TO BUILD?",
             options: ["CITY INFILL", "SUBURBS"],
+            // next: {
+            //   default: "map",
+            // },
           },
+          // {
+          //   id: "map",
+          //   question: "Drag and Zoom The Area You Want To Live",
+          //   options: ["Next"],
+          //   next: {
+              
+          //   },
+          // },
         ],
       },
     ],

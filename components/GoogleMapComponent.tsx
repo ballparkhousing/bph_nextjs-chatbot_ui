@@ -6,7 +6,7 @@ interface GoogleMapComponentProps {
   lng: number;
   zoom: number;
   onShapeComplete: (shape: any) => void;
-  polygonCoords?: google.maps.LatLngLiteral[][];
+  polygonCoords?: Array<Array<{ lat: number; lng: number }>> | null;
 }
 
 const containerStyle = {
@@ -19,7 +19,7 @@ const GoogleMapComponent: React.FC<GoogleMapComponentProps> = ({ lat, lng, zoom,
   const [mapLoaded, setMapLoaded] = useState(false);
   const [drawnShapes, setDrawnShapes] = useState<any[]>([]);
 
-  const onLoad = useCallback((map) => {
+  const onLoad = useCallback((map: google.maps.Map) => {
     mapRef.current = map;
     setMapLoaded(true);
   }, []);
@@ -85,7 +85,7 @@ const GoogleMapComponent: React.FC<GoogleMapComponentProps> = ({ lat, lng, zoom,
                 drawingControl: true,
                 drawingControlOptions: {
                   position: google.maps.ControlPosition.TOP_CENTER,
-                  drawingModes: ['rectangle', 'circle'],
+                  drawingModes: [google.maps.drawing.OverlayType.RECTANGLE, google.maps.drawing.OverlayType.CIRCLE],
                 },
                 rectangleOptions: {
                   fillColor: '#ffff00',

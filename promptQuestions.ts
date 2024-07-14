@@ -1,4 +1,25 @@
-export const promptQuestion = {
+export interface Question {
+  id: string;
+  question: string;
+  options: string[];
+  next?: {
+    [key: string]: string;
+    default?: string | any;
+  };
+}
+
+export interface Scenario {
+  question: string;
+  questions: Question[]
+}
+
+export interface PromptQuestion {
+  [key: string]: {
+    scenarios: Scenario[];
+  };
+}
+
+export const promptQuestion: PromptQuestion = {
   renter: {
     scenarios: [
       {

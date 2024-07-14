@@ -32,7 +32,7 @@ const GoogleMapComponent: React.FC<GoogleMapComponentProps> = ({ lat, lng, zoom,
   const handleOverlayComplete = (event: google.maps.drawing.OverlayCompleteEvent) => {
     if (event.type === google.maps.drawing.OverlayType.RECTANGLE) {
       const bounds = (event.overlay as google.maps.Rectangle).getBounds();
-      console.log('Rectangle Bounds:', bounds);
+      //console.log('Rectangle Bounds:', bounds);
       setDrawnShapes(prevShapes => [...prevShapes, { type: 'rectangle', bounds }]);
       onShapeComplete(bounds);
     } else if (event.type === google.maps.drawing.OverlayType.CIRCLE) {

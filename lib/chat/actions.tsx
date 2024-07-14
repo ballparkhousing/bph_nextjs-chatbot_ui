@@ -509,6 +509,7 @@ export const AI = createAI<AIState, UIState>({
       const aiState = getAIState()
 
       if (aiState) {
+        // @ts-ignore
         const uiState = getUIStateFromAIState(aiState)
         return uiState
       }

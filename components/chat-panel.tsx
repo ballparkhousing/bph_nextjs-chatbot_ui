@@ -12,7 +12,7 @@ import { useAIState, useActions, useUIState } from 'ai/rsc';
 import type { AI } from '@/lib/chat/actions';
 import { nanoid } from 'nanoid';
 import { UserMessage } from './stocks/message';
-import { promptQuestion } from '@/promptQuestions';
+import {promptQuestion, Question, Scenario} from '@/promptQuestions';
 
 
 export interface ChatPanelProps {
@@ -22,6 +22,15 @@ export interface ChatPanelProps {
   setInput: (value: string) => void;
   isAtBottom: boolean;
   scrollToBottom: () => void;
+}
+
+interface Location {
+  lat: number;
+  lng: number;
+}
+
+interface Locations {
+  [key: string]: Location;
 }
 
 export function ChatPanel({
@@ -37,12 +46,12 @@ export function ChatPanel({
   const { submitUserMessage } = useActions();
   const [shareDialogOpen, setShareDialogOpen] = React.useState(false);
   const [currentQuestionId, setCurrentQuestionId] = React.useState('');
-  const [currentScenario, setCurrentScenario] = React.useState(null);
+  const [currentScenario, setCurrentScenario] = React.useState<string>("");
   const [answers, setAnswers] = React.useState({});
   const [showMap, setShowMap] = React.useState(false);
   const [mapCoords, setMapCoords] = React.useState<{ lat: number, lng: number } | null>(null);
   const [drawnShape, setDrawnShape] = React.useState(null);
-  const [polygonCoords, setPolygonCoords] = React.useState<google.maps.LatLngLiteral[][] | null>(null);
+  const [polygonCoords, setPolygonCoords] = React.useState<Array<Array<{ lat: number; lng: number }>> | null>(null);
 
   const initialScenarioSelection = [
     {
@@ -61,7 +70,7 @@ export function ChatPanel({
     console.log("Current Answers:", answers);
   }, [answers]);
 
-  const locations = {
+  const locations: Locations = {
     UNIVERSITY_UOFA: { lat: 53.5232, lng: -113.5263 },
     UNIVERSITY_MACEWAN: { lat: 53.5461, lng: -113.5017 },
     DOWNTOWN: { lat: 53.5461, lng: -113.4938 },
@@ -72,8 +81,17 @@ export function ChatPanel({
     CWB_AREA: { lat: 53.5398, lng: -113.4971 },
   };
 
-  const handleOptionChange = (questionId: any, option: any) => {
-    const nextQuestionId = promptQuestion[currentScenario].scenarios[0].questions.find(q => q.id === questionId).next?.[option] || promptQuestion[currentScenario].scenarios[0].questions.find(q => q.id === questionId).next?.default;
+  const handleOptionChange = (questionId: string, option: string) => {
+    const scenario: Scenario = promptQuestion[currentScenario].scenarios[0];
+    const question = scenario.questions.find((question: Question) => question.id === questionId);
+
+    if (!question) return;
+
+    const nextQuestionId: string =
+        (question.hasOwnProperty("next") &&
+            question?.next !== undefined &&
+            (question?.next[option] || question?.next?.default)) ?? '';
+
     setCurrentQuestionId(nextQuestionId);
 
     setAnswers((prevAnswers) => ({
@@ -172,9 +190,9 @@ export function ChatPanel({
     }
   };
 
-  const renderQuestions = (questions, questionId) => {
-    const questionObj = questions.find((q) => q.id === questionId);
-    if (!questionObj) return null;
+  const renderQuestions = (questions: Question[], questionId: string) => {
+    const questionObj = questions.find((question: Question) => question.id === questionId);
+    if (!questionObj) return;
 
     const { question, options } = questionObj;
 
@@ -182,7 +200,7 @@ export function ChatPanel({
       <div className="mb-4">
         <p className="text-sm mb-2 font-semibold">{question}</p>
         <div className="mb-4 grid grid-cols-2 gap-2 px-4 sm:px-0">
-          {options.map((option) => (
+          {options.map((option: string) => (
             <div key={option} onClick={() => handleOptionChange(questionId, option)} className={`cursor-pointer rounded-lg border bg-white p-4 hover:bg-zinc-50 dark:bg-zinc-950 dark:hover:bg-zinc-900`}>
               <div className="text-sm font-semibold">{option}</div>
             </div>
@@ -197,13 +215,11 @@ export function ChatPanel({
       <ButtonScrollToBottom isAtBottom={isAtBottom} scrollToBottom={scrollToBottom} />
 
       <div className="mx-auto sm:max-w-2xl sm:px-4">
-        <div className={`${currentScenario !== null && 'hidden'} mb-4 grid grid-cols-2 gap-2 px-4 sm:px-0`}>
+        <div className={`${currentScenario.length !== 0  && 'hidden'} mb-4 grid grid-cols-2 gap-2 px-4 sm:px-0`}>
           {initialScenarioSelection.map(({ scenario, heading, subheading }) => (
             <div key={scenario} onClick={() => {
               setCurrentScenario(scenario);
-              if (currentScenario === null) {
-                setCurrentQuestionId(promptQuestion[scenario].scenarios[0].questions[0].id);
-              }
+              setCurrentQuestionId(promptQuestion[scenario].scenarios[0].questions[0].id);
             }} className={`cursor-pointer rounded-lg border bg-white p-4 hover:bg-zinc-50 dark:bg-zinc-950 dark:hover:bg-zinc-900`}>
               <div className="text-sm font-semibold">{heading}</div>
               <div className="text-sm text-zinc-600">
@@ -213,7 +229,7 @@ export function ChatPanel({
           ))}
         </div>
 
-        {currentScenario && renderQuestions(
+        {currentScenario.length !== 0 && renderQuestions(
           promptQuestion[currentScenario].scenarios[0].questions, currentQuestionId
         )}
 
@@ -221,10 +237,10 @@ export function ChatPanel({
         {showMap && mapCoords && (
           <div>
             <p className="text-sm mb-2 font-semibold">Drag, zoom, and draw to select the area you want</p>
-            <GoogleMapComponent 
-              lat={mapCoords.lat} 
-              lng={mapCoords.lng} 
-              zoom={15} 
+            <GoogleMapComponent
+              lat={mapCoords.lat}
+              lng={mapCoords.lng}
+              zoom={15}
               onShapeComplete={(shape) => setDrawnShape(shape)}
               polygonCoords={polygonCoords} // Pass multipolygon coordinates to GoogleMapComponent
             />

@@ -13,7 +13,7 @@ import { nanoid } from 'nanoid';
 import { UserMessage } from './stocks/message';
 import { promptQuestion, Question, Scenario } from '@/promptQuestions';
 import { searchRental } from '@/lib/rental';
-import { number } from 'zod';
+import { Message } from '@/lib/types';
 
 export interface ChatPanelProps {
   id?: string;
@@ -34,15 +34,15 @@ interface Locations {
 }
 
 export function ChatPanel({
-  id,
-  title,
+  id = nanoid(), // Ensure id is always a string
+  title = 'Default Title', // Ensure title is always a string
   input,
   setInput,
   isAtBottom,
   scrollToBottom,
 }: ChatPanelProps) {
   const [aiState] = useAIState();
-  const [messages, setMessages] = useUIState<typeof AI>();
+  const [messages, setMessages] = useUIState<Message[]>(); // Ensure messages is typed as Message[]
   const { submitUserMessage } = useActions();
   const [shareDialogOpen, setShareDialogOpen] = React.useState(false);
   const [currentQuestionId, setCurrentQuestionId] = React.useState('');
@@ -51,7 +51,9 @@ export function ChatPanel({
   const [showMap, setShowMap] = React.useState(false);
   const [mapCoords, setMapCoords] = React.useState<{ lat: number; lng: number } | null>(null);
   const [drawnShape, setDrawnShape] = React.useState(null);
-  const [polygonCoords, setPolygonCoords] = React.useState<Array<{ lat: number; lng: number }>> (null);
+  const [polygonCoords, setPolygonCoords] = React.useState<Array<{ lat: number; lng: number }> | null>(null);
+  const [rentalResults, setRentalResults] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(false);
 
   const initialScenarioSelection = [
     {
@@ -156,7 +158,8 @@ export function ChatPanel({
           { lat: 53.58, lng: -113.46 },
           { lat: 53.54, lng: -113.59 },
           { lat: 53.6, lng: -113.39 }
-      ]);
+        ]
+      );
     } else {
       setPolygonCoords(null);
     }
@@ -211,17 +214,6 @@ export function ChatPanel({
         {currentScenario.length !== 0 && (
           <>
             <div>{renderQuestions(promptQuestion[currentScenario].scenarios[0].questions, currentQuestionId)}</div>
-
-            {/* {showMap && mapCoords && (
-              <div>
-                <GoogleMapComponent
-                  coords={mapCoords}
-                  drawnShape={drawnShape}
-                  setDrawnShape={setDrawnShape}
-                  polygonCoords={polygonCoords}
-                />
-              </div>
-            )} */}
           </>
         )}
 
@@ -229,9 +221,10 @@ export function ChatPanel({
         {rentalResults.length > 0 && rentalResults.map((result, index) => (
           <div key={index} className="mb-4 border rounded-lg p-4">
             <GoogleMapComponent
-              coords={{ lat: number(result.latitude), lng: number(result.longitude) }}
-              drawnShape={drawnShape}
-              setDrawnShape={setDrawnShape}
+              lat={parseFloat(result.latitude)}
+              lng={parseFloat(result.longitude)}
+              zoom={15}
+              onShapeComplete={setDrawnShape}
               polygonCoords={polygonCoords}
             />
             <div className="mt-4">
@@ -242,8 +235,7 @@ export function ChatPanel({
               {result.photos.length > 0 &&  result.photos.map((photo: string | undefined, index: any) => (
                 // eslint-disable-next-line @next/next/no-img-element, react/jsx-key
                 <img src={photo} alt="Property" className="mt-2 rounded-lg" width="200" />
-              )
-              )}
+              ))}
             </div>
           </div>
         ))}
@@ -266,16 +258,18 @@ export function ChatPanel({
               )}
 
               {messages.map((message, index) => (
-                <UserMessage key={index} message={message} />
+                <UserMessage key={index}>
+                  {message.display}
+                </UserMessage>
               ))}
 
               {shareDialogOpen ? (
                 <ChatShareDialog
-                  id={id!}
-                  title={title!}
+                  chat={{ id, title, messages }}
                   open={shareDialogOpen}
-                  setOpen={setShareDialogOpen}
-                  shareChatMutation={shareChat}
+                  onOpenChange={setShareDialogOpen}
+                  shareChat={shareChat}
+                  onCopy={() => console.log('Link copied!')}
                 />
               ) : null}
 
@@ -283,9 +277,10 @@ export function ChatPanel({
               {rentalResults.length > 0 && rentalResults.map((result, index) => (
                 <div key={index} className="mb-4 border rounded-lg p-4">
                   <GoogleMapComponent
-                    coords={{ lat: parseFloat(result.latitude), lng: parseFloat(result.longitude) }}
-                    drawnShape={drawnShape}
-                    setDrawnShape={setDrawnShape}
+                    lat={parseFloat(result.latitude)}
+                    lng={parseFloat(result.longitude)}
+                    zoom={15}
+                    onShapeComplete={setDrawnShape}
                     polygonCoords={polygonCoords}
                   />
                   <div className="mt-4">

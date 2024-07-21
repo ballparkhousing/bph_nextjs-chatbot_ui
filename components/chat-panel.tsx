@@ -51,7 +51,7 @@ export function ChatPanel({
   const [showMap, setShowMap] = React.useState(false);
   const [mapCoords, setMapCoords] = React.useState<{ lat: number; lng: number } | null>(null);
   const [drawnShape, setDrawnShape] = React.useState(null);
-  const [polygonCoords, setPolygonCoords] = React.useState<Array<Array<{ lat: number; lng: number }>> | null>(null);
+  const [polygonCoords, setPolygonCoords] = React.useState<Array<{ lat: number; lng: number }>> (null);
 
   const initialScenarioSelection = [
     {

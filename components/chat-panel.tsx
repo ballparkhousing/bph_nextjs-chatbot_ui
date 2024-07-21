@@ -1,7 +1,5 @@
 import * as React from 'react';
 import GoogleMapComponent from './GoogleMapComponent'; // Ensure this component is updated to handle multiple polygons
-import { saveAs } from 'file-saver'; // Import FileSaver
-
 import { shareChat } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { PromptForm } from '@/components/prompt-form';
@@ -14,6 +12,8 @@ import type { AI } from '@/lib/chat/actions';
 import { nanoid } from 'nanoid';
 import { UserMessage } from './stocks/message';
 import { promptQuestion, Question, Scenario } from '@/promptQuestions';
+import { searchRental } from '@/lib/rental';
+import { number } from 'zod';
 
 export interface ChatPanelProps {
   id?: string;
@@ -51,7 +51,7 @@ export function ChatPanel({
   const [showMap, setShowMap] = React.useState(false);
   const [mapCoords, setMapCoords] = React.useState<{ lat: number; lng: number } | null>(null);
   const [drawnShape, setDrawnShape] = React.useState(null);
-  const [polygonCoords, setPolygonCoords] = React.useState<Array<{ lat: number; lng: number }>>(null);
+  const [polygonCoords, setPolygonCoords] = React.useState<Array<Array<{ lat: number; lng: number }>> | null>(null);
 
   const initialScenarioSelection = [
     {
@@ -70,6 +70,10 @@ export function ChatPanel({
     console.log('Current Answers:', answers);
   }, [answers]);
 
+  React.useEffect(() => {
+    console.log('Rental Results:', rentalResults);
+  }, [rentalResults]);
+
   const locations: Locations = {
     UNIVERSITY_UOFA: { lat: 53.5232, lng: -113.5263 },
     UNIVERSITY_MACEWAN: { lat: 53.5461, lng: -113.5017 },
@@ -80,9 +84,17 @@ export function ChatPanel({
     CWB_AREA: { lat: 53.5398, lng: -113.4971 },
   };
 
-  const saveResponsesToFile = (responses: any) => {
-    const blob = new Blob([JSON.stringify(responses, null, 2)], { type: 'application/json' });
-    saveAs(blob, 'user_responses.json');
+  const sendRequest = async (responses: any) => {
+    try {
+      setLoading(true); // Set loading to true when request starts
+      const data = await searchRental(JSON.stringify(responses));
+      setRentalResults(data.results); // Set the results in state
+      console.log('Rental Results:', data.results);
+    } catch (error) {
+      console.error('Failed to fetch rental results:', error);
+    } finally {
+      setLoading(false); // Set loading to false when request completes
+    }
   };
 
   const handleOptionChange = (questionId: string, option: string) => {
@@ -108,7 +120,7 @@ export function ChatPanel({
 
     // Save the responses to a JSON file if the next question is "map"
     if (nextQuestionId === 'map') {
-      saveResponsesToFile(updatedAnswers);
+      sendRequest(updatedAnswers);
     }
 
     // Check if the selected option corresponds to a location
@@ -200,7 +212,7 @@ export function ChatPanel({
           <>
             <div>{renderQuestions(promptQuestion[currentScenario].scenarios[0].questions, currentQuestionId)}</div>
 
-            {showMap && mapCoords && (
+            {/* {showMap && mapCoords && (
               <div>
                 <GoogleMapComponent
                   coords={mapCoords}
@@ -209,9 +221,33 @@ export function ChatPanel({
                   polygonCoords={polygonCoords}
                 />
               </div>
-            )}
+            )} */}
           </>
         )}
+
+        {/* Display rental results one by one */}
+        {rentalResults.length > 0 && rentalResults.map((result, index) => (
+          <div key={index} className="mb-4 border rounded-lg p-4">
+            <GoogleMapComponent
+              coords={{ lat: number(result.latitude), lng: number(result.longitude) }}
+              drawnShape={drawnShape}
+              setDrawnShape={setDrawnShape}
+              polygonCoords={polygonCoords}
+            />
+            <div className="mt-4">
+              <h3 className="text-lg font-semibold">{result.recommendation_summary}</h3>
+              <p className="text-sm">Type: {result.type}</p>
+              <p className="text-sm">Price: {result.price}</p>
+              <p className="text-sm">Address: {result.address}</p>
+              {result.photos.length > 0 &&  result.photos.map((photo: string | undefined, index: any) => (
+                // eslint-disable-next-line @next/next/no-img-element, react/jsx-key
+                <img src={photo} alt="Property" className="mt-2 rounded-lg" width="200" />
+              )
+              )}
+            </div>
+          </div>
+        ))}
+        {loading && <p>Loading...</p>}
 
         <div className="pb-[150px] pt-4 sm:pb-[90px]">
           {messages.length > 0 ? (
@@ -223,7 +259,7 @@ export function ChatPanel({
                     className="border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-black"
                     onClick={() => setShareDialogOpen(true)}
                   >
-                    <IconShare className="mr-2 h-4 w-4" />
+                    <IconShare className="mr-2 size-4" />
                     Share
                   </Button>
                 </div>
@@ -242,6 +278,29 @@ export function ChatPanel({
                   shareChatMutation={shareChat}
                 />
               ) : null}
+
+              {/* Display rental results one by one */}
+              {rentalResults.length > 0 && rentalResults.map((result, index) => (
+                <div key={index} className="mb-4 border rounded-lg p-4">
+                  <GoogleMapComponent
+                    coords={{ lat: parseFloat(result.latitude), lng: parseFloat(result.longitude) }}
+                    drawnShape={drawnShape}
+                    setDrawnShape={setDrawnShape}
+                    polygonCoords={polygonCoords}
+                  />
+                  <div className="mt-4">
+                    <h3 className="text-lg font-semibold">{result.recommendation_summary}</h3>
+                    <p className="text-sm">Type: {result.type}</p>
+                    <p className="text-sm">Price: {result.price}</p>
+                    <p className="text-sm">Address: {result.address}</p>
+                    {result.photos.length > 0 && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={result.photos[0]} alt="Property" className="mt-2 rounded-lg" width="200" />
+                    )}
+                  </div>
+                </div>
+              ))}
+              {loading && <p>Loading...</p>}
             </div>
           ) : (
             <div className="mt-6 flex justify-center px-4 text-center text-sm text-muted-foreground sm:px-0">

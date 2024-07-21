@@ -1,12 +1,12 @@
-import React, { useCallback, useRef, useState } from 'react';
-import { GoogleMap, LoadScript, Marker, DrawingManager, Polygon } from '@react-google-maps/api';
+import React, { useCallback, useRef, useState, useEffect } from 'react';
+import { GoogleMap, LoadScript, Marker, DrawingManager } from '@react-google-maps/api';
 
 interface GoogleMapComponentProps {
   lat: number;
   lng: number;
   zoom: number;
   onShapeComplete: (shape: any) => void;
-  polygonCoords?: Array<Array<{ lat: number; lng: number }>> | null;
+  polygonCoords?: Array<{ lat: number; lng: number }> | null; // Update the type of polygonCoords
 }
 
 const containerStyle = {
@@ -18,10 +18,12 @@ const GoogleMapComponent: React.FC<GoogleMapComponentProps> = ({ lat, lng, zoom,
   const mapRef = useRef<google.maps.Map | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [drawnShapes, setDrawnShapes] = useState<any[]>([]);
+  const [googleMapsApi, setGoogleMapsApi] = useState<typeof google | null>(null);
 
   const onLoad = useCallback((map: google.maps.Map) => {
     mapRef.current = map;
     setMapLoaded(true);
+    setGoogleMapsApi(window.google); // Ensure google is set when map is loaded
   }, []);
 
   const onUnmount = useCallback(() => {
@@ -32,14 +34,11 @@ const GoogleMapComponent: React.FC<GoogleMapComponentProps> = ({ lat, lng, zoom,
   const handleOverlayComplete = (event: google.maps.drawing.OverlayCompleteEvent) => {
     if (event.type === google.maps.drawing.OverlayType.RECTANGLE) {
       const bounds = (event.overlay as google.maps.Rectangle).getBounds();
-      //console.log('Rectangle Bounds:', bounds);
       setDrawnShapes(prevShapes => [...prevShapes, { type: 'rectangle', bounds }]);
       onShapeComplete(bounds);
     } else if (event.type === google.maps.drawing.OverlayType.CIRCLE) {
       const center = (event.overlay as google.maps.Circle).getCenter();
       const radius = (event.overlay as google.maps.Circle).getRadius();
-      console.log('Circle Center:', center);
-      console.log('Circle Radius:', radius);
       setDrawnShapes(prevShapes => [...prevShapes, { type: 'circle', center, radius }]);
       onShapeComplete({ center, radius });
     }
@@ -60,51 +59,12 @@ const GoogleMapComponent: React.FC<GoogleMapComponentProps> = ({ lat, lng, zoom,
         <Marker position={{ lat, lng }} />
         {mapLoaded && (
           <>
-            {polygonCoords && polygonCoords.map((coords, index) => (
-              <Polygon
+            {polygonCoords && polygonCoords.map((coord, index) => (
+              <Marker
                 key={index}
-                paths={coords}
-                options={{
-                  fillColor: '#00FF00',
-                  fillOpacity: 0.4,
-                  strokeColor: '#0000FF',
-                  strokeOpacity: 1,
-                  strokeWeight: 2,
-                  clickable: true,
-                  draggable: false,
-                  editable: false,
-                  geodesic: false,
-                  zIndex: 1,
-                }}
+                position={coord}
               />
             ))}
-
-            <DrawingManager
-              onOverlayComplete={handleOverlayComplete}
-              options={{
-                drawingControl: true,
-                drawingControlOptions: {
-                  position: google.maps.ControlPosition.TOP_CENTER,
-                  drawingModes: [google.maps.drawing.OverlayType.RECTANGLE, google.maps.drawing.OverlayType.CIRCLE],
-                },
-                rectangleOptions: {
-                  fillColor: '#ffff00',
-                  fillOpacity: 0.5,
-                  strokeWeight: 2,
-                  clickable: true,
-                  editable: true,
-                  zIndex: 1,
-                },
-                circleOptions: {
-                  fillColor: '#ffff00',
-                  fillOpacity: 0.5,
-                  strokeWeight: 2,
-                  clickable: true,
-                  editable: true,
-                  zIndex: 1,
-                },
-              }}
-            />
           </>
         )}
 
@@ -127,6 +87,22 @@ const GoogleMapComponent: React.FC<GoogleMapComponentProps> = ({ lat, lng, zoom,
           }
           return null;
         })}
+
+        {googleMapsApi && (
+          <DrawingManager
+            onOverlayComplete={handleOverlayComplete}
+            options={{
+              drawingControl: true,
+              drawingControlOptions: {
+                position: googleMapsApi.maps.ControlPosition.TOP_CENTER,
+                drawingModes: [
+                  googleMapsApi.maps.drawing.OverlayType.CIRCLE,
+                  googleMapsApi.maps.drawing.OverlayType.RECTANGLE,
+                ],
+              },
+            }}
+          />
+        )}
       </GoogleMap>
     </LoadScript>
   );

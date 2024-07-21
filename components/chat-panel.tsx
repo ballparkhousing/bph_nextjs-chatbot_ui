@@ -1,5 +1,6 @@
 import * as React from 'react';
 import GoogleMapComponent from './GoogleMapComponent'; // Ensure this component is updated to handle multiple polygons
+import { saveAs } from 'file-saver'; // Import FileSaver
 
 import { shareChat } from '@/app/actions';
 import { Button } from '@/components/ui/button';
@@ -12,8 +13,7 @@ import { useAIState, useActions, useUIState } from 'ai/rsc';
 import type { AI } from '@/lib/chat/actions';
 import { nanoid } from 'nanoid';
 import { UserMessage } from './stocks/message';
-import {promptQuestion, Question, Scenario} from '@/promptQuestions';
-
+import { promptQuestion, Question, Scenario } from '@/promptQuestions';
 
 export interface ChatPanelProps {
   id?: string;
@@ -39,17 +39,17 @@ export function ChatPanel({
   input,
   setInput,
   isAtBottom,
-  scrollToBottom
+  scrollToBottom,
 }: ChatPanelProps) {
   const [aiState] = useAIState();
   const [messages, setMessages] = useUIState<typeof AI>();
   const { submitUserMessage } = useActions();
   const [shareDialogOpen, setShareDialogOpen] = React.useState(false);
   const [currentQuestionId, setCurrentQuestionId] = React.useState('');
-  const [currentScenario, setCurrentScenario] = React.useState<string>("");
+  const [currentScenario, setCurrentScenario] = React.useState<string>('');
   const [answers, setAnswers] = React.useState({});
   const [showMap, setShowMap] = React.useState(false);
-  const [mapCoords, setMapCoords] = React.useState<{ lat: number, lng: number } | null>(null);
+  const [mapCoords, setMapCoords] = React.useState<{ lat: number; lng: number } | null>(null);
   const [drawnShape, setDrawnShape] = React.useState(null);
   const [polygonCoords, setPolygonCoords] = React.useState<Array<Array<{ lat: number; lng: number }>> | null>(null);
 
@@ -57,28 +57,32 @@ export function ChatPanel({
     {
       scenario: 'renter',
       heading: 'I want to Rent',
-      subheading: 'Click here if you are a Renter'
+      subheading: 'Click here if you are a Renter',
     },
     {
       scenario: 'builder',
       heading: 'I want to Build',
-      subheading: `Click here if you are a Developer`
-    }
+      subheading: 'Click here if you are a Developer',
+    },
   ];
 
   React.useEffect(() => {
-    console.log("Current Answers:", answers);
+    console.log('Current Answers:', answers);
   }, [answers]);
 
   const locations: Locations = {
     UNIVERSITY_UOFA: { lat: 53.5232, lng: -113.5263 },
     UNIVERSITY_MACEWAN: { lat: 53.5461, lng: -113.5017 },
     DOWNTOWN: { lat: 53.5461, lng: -113.4938 },
-    CITY_INFILL: { lat: 53.41280, lng: -113.4633 }, // City infill coordinates
-    // SUBURBS: { lat: 53.4236, lng: -113.5850 },
+    CITY_INFILL: { lat: 53.5461, lng: -113.4938 }, // City infill coordinates
     SOUTHSIDE: { lat: 53.4836, lng: -113.5222 },
     ROGERS_AREA: { lat: 53.5465, lng: -113.4972 },
     CWB_AREA: { lat: 53.5398, lng: -113.4971 },
+  };
+
+  const saveResponsesToFile = (responses: any) => {
+    const blob = new Blob([JSON.stringify(responses, null, 2)], { type: 'application/json' });
+    saveAs(blob, 'user_responses.json');
   };
 
   const handleOptionChange = (questionId: string, option: string) => {
@@ -88,17 +92,24 @@ export function ChatPanel({
     if (!question) return;
 
     const nextQuestionId: string =
-        (question.hasOwnProperty("next") &&
-            question?.next !== undefined &&
-            (question?.next[option] || question?.next?.default)) ?? '';
+      (question.hasOwnProperty('next') &&
+        question?.next !== undefined &&
+        (question?.next[option] || question?.next?.default)) ?? '';
 
     setCurrentQuestionId(nextQuestionId);
 
-    setAnswers((prevAnswers) => ({
-      ...prevAnswers,
+    const updatedAnswers = {
+      ...answers,
       scenario: currentScenario,
-      [questionId]: option
-    }));
+      [questionId]: option,
+    };
+
+    setAnswers(updatedAnswers);
+
+    // Save the responses to a JSON file if the next question is "map"
+    if (nextQuestionId === 'map') {
+      saveResponsesToFile(updatedAnswers);
+    }
 
     // Check if the selected option corresponds to a location
     if (locations[option]) {
@@ -111,79 +122,37 @@ export function ChatPanel({
       setPolygonCoords([
         // Replace with your actual multipolygon coordinates for city infill
         [
-          { lat: 53.41395613907227, lng: -113.46405030242478 },
-          { lat: 53.41349671510333, lng: -113.46405051768666 },
-          { lat: 53.41341131902844, lng: -113.46404550432999 },
-          { lat: 53.41342841077599, lng: -113.46366797169718 }
-        ],
-
-        [
-          { lat: 53.41339173673339, lng: -113.4631592712707 },
-          { lat: 53.41332082341116, lng: -113.46268421135665 },
-          { lat: 53.41322170651332, lng: -113.46229152484769 },
-          { lat: 53.41303907897748, lng: -113.46179784311077 }
-        ],
-
-        [
-          { lat: 53.41286164159375, lng: -113.46145917115864 },
-          { lat: 53.41260729607444, lng: -113.46107719994447 },
-          { lat: 53.412725848545314, lng: -113.46069617276413 },
-          { lat: 53.412802166511774, lng: -113.46033645790904 }
+          { lat: 53.55, lng: -113.48 },
+          { lat: 53.52, lng: -113.51 },
+          { lat: 53.55, lng: -113.6 },
+          { lat: 53.55, lng: -113.5 },
         ],
         [
-          { lat: 53.412854954221, lng: -113.4599444276959 },
-          { lat: 53.41287515806032, lng: -113.45952889079341 },
-          { lat: 53.412874940350335, lng: -113.45926659318334 },
-          { lat: 53.41296196193292, lng: -113.45926200756216 },
-          { lat: 53.415314432766934, lng: -113.45926590318649 }
-
+          { lat: 53.46, lng: -113.38 },
+          { lat: 53.51, lng: -113.52 },
+          { lat: 53.53, lng: -113.5 },
+          { lat: 53.51, lng: -113.62 },
         ],
         [
-          { lat: 53.41531430486315, lng: -113.46038023638103 },
-          { lat: 53.415493974609845, lng: -113.46068108110167 },
-          { lat: 53.416246459288175, lng: -113.46068137380644 },
-          { lat: 53.416246058469795, lng: -113.46161009725594 }
+          { lat: 53.53, lng: -113.5 },
+          { lat: 53.54, lng: -113.42 },
+          { lat: 53.44, lng: -113.41 },
+          { lat: 53.56, lng: -113.51 },
         ],
         [
-          { lat: 53.416246286484416, lng: -113.46229102935166 },
-          { lat: 53.416246076679634, lng: -113.46317566637221 },
-          { lat: 53.41624610390798, lng: -113.46382547084825 },
-          { lat: 53.416244893149184, lng: -113.46394571361368 }
+          { lat: 53.55, lng: -113.53 },
+          { lat: 53.52, lng: -113.51 },
+          { lat: 53.44, lng: -113.57 },
+          { lat: 53.59, lng: -113.53 },
+          { lat: 53.54, lng: -113.48 },
         ],
         [
-          { lat: 53.41624608479272, lng: -113.4640021918837 },
-          { lat: 53.416246078586205, lng: -113.46404986782895 },
-          { lat: 53.41455692091663, lng: -113.46405013441276 },
-          { lat: 53.41455677078354, lng: -113.46501497329925 }
+          { lat: 53.47, lng: -113.4 },
+          { lat: 53.46, lng: -113.4 },
+          { lat: 53.58, lng: -113.46 },
+          { lat: 53.54, lng: -113.59 },
         ],
-        [
-          { lat: 53.41455691649562, lng: -113.4657965382786 },
-          { lat: 53.41455667203773, lng: -113.4667685693643 },
-          { lat: 53.41349385887247, lng: -113.46676922597571 },
-          { lat: 53.41350834895336, lng: -113.46659250075848 },
-          { lat: 53.4135269652993, lng: -113.46640673699012 },
-          { lat: 53.41358348560569, lng: -113.46604435726562 }
-        ],
-        [
-          { lat: 53.41366539228268, lng: -113.46568209005986 },
-          { lat: 53.413714603738775, lng: -113.46550541724868 },
-          { lat: 53.413765956445445, lng: -113.46531973334575 },
-          { lat: 53.4138059087287, lng: -113.46514302996852 },
-          { lat: 53.41384751335187, lng: -113.4649573081401 },
-          { lat: 53.4139064255869, lng: -113.46459486061094 },
-          { lat: 53.41394450311096, lng: -113.46423242123221 },
-          { lat: 53.41395613907227, lng: -113.46405030242478 }
-        ],
-        // [
-        //   { lat: 53.41394450311096, lng: -113.46423242123221 },
-        //   { lat: 53.41395613907227, lng: -113.46405030242478 },
-        
-        
-        //   { lat: 53.5460, lng: -113.5100 },
-        //   { lat: 53.5475, lng: -113.5000 },
-        //   { lat: 53.5417, lng: -113.4934 },
-        //   { lat: 53.5358, lng: -113.5030 }
-        // ]
+        [{ lat: 53.6, lng: -113.39 }],
       ]);
     } else {
       setPolygonCoords(null);
@@ -201,7 +170,11 @@ export function ChatPanel({
         <p className="text-sm mb-2 font-semibold">{question}</p>
         <div className="mb-4 grid grid-cols-2 gap-2 px-4 sm:px-0">
           {options.map((option: string) => (
-            <div key={option} onClick={() => handleOptionChange(questionId, option)} className={`cursor-pointer rounded-lg border bg-white p-4 hover:bg-zinc-50 dark:bg-zinc-950 dark:hover:bg-zinc-900`}>
+            <div
+              key={option}
+              onClick={() => handleOptionChange(questionId, option)}
+              className={`cursor-pointer rounded-lg border bg-white p-4 hover:bg-zinc-50 dark:bg-zinc-950 dark:hover:bg-zinc-900`}
+            >
               <div className="text-sm font-semibold">{option}</div>
             </div>
           ))}
@@ -215,41 +188,81 @@ export function ChatPanel({
       <ButtonScrollToBottom isAtBottom={isAtBottom} scrollToBottom={scrollToBottom} />
 
       <div className="mx-auto sm:max-w-2xl sm:px-4">
-        <div className={`${currentScenario.length !== 0  && 'hidden'} mb-4 grid grid-cols-2 gap-2 px-4 sm:px-0`}>
+        <div className={`${currentScenario.length !== 0 && 'hidden'} mb-4 grid grid-cols-2 gap-2 px-4 sm:px-0`}>
           {initialScenarioSelection.map(({ scenario, heading, subheading }) => (
-            <div key={scenario} onClick={() => {
-              setCurrentScenario(scenario);
-              setCurrentQuestionId(promptQuestion[scenario].scenarios[0].questions[0].id);
-            }} className={`cursor-pointer rounded-lg border bg-white p-4 hover:bg-zinc-50 dark:bg-zinc-950 dark:hover:bg-zinc-900`}>
+            <div
+              key={scenario}
+              onClick={() => {
+                setCurrentScenario(scenario);
+                const questionId = promptQuestion[scenario].scenarios[0].questions[0].id;
+                setCurrentQuestionId(questionId);
+              }}
+              className={`cursor-pointer rounded-lg border bg-white p-4 hover:bg-zinc-50 dark:bg-zinc-950 dark:hover:bg-zinc-900`}
+            >
               <div className="text-sm font-semibold">{heading}</div>
-              <div className="text-sm text-zinc-600">
-                {subheading}
-              </div>
+              <div className="text-xs">{subheading}</div>
             </div>
           ))}
         </div>
 
-        {currentScenario.length !== 0 && renderQuestions(
-          promptQuestion[currentScenario].scenarios[0].questions, currentQuestionId
+        {currentScenario.length !== 0 && (
+          <>
+            <div>{renderQuestions(promptQuestion[currentScenario].scenarios[0].questions, currentQuestionId)}</div>
+
+            {showMap && mapCoords && (
+              <div>
+                <GoogleMapComponent
+                  coords={mapCoords}
+                  drawnShape={drawnShape}
+                  setDrawnShape={setDrawnShape}
+                  polygonCoords={polygonCoords}
+                />
+              </div>
+            )}
+          </>
         )}
 
-        {/* Conditionally render the GoogleMapComponent */}
-        {showMap && mapCoords && (
-          <div>
-            <p className="text-sm mb-2 font-semibold">Drag, zoom, and draw to select the area you want</p>
-            <GoogleMapComponent
-              lat={mapCoords.lat}
-              lng={mapCoords.lng}
-              zoom={15}
-              onShapeComplete={(shape) => setDrawnShape(shape)}
-              polygonCoords={polygonCoords} // Pass multipolygon coordinates to GoogleMapComponent
-            />
-          </div>
-        )}
+        <div className="pb-[150px] pt-4 sm:pb-[90px]">
+          {messages.length > 0 ? (
+            <div className="px-4 sm:px-0">
+              {id && (
+                <div className="flex w-full items-center justify-center pb-4 pt-2">
+                  <Button
+                    variant="outline"
+                    className="border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-black"
+                    onClick={() => setShareDialogOpen(true)}
+                  >
+                    <IconShare className="mr-2 h-4 w-4" />
+                    Share
+                  </Button>
+                </div>
+              )}
 
-        <div className="space-y-4 border-t bg-background px-4 py-2 shadow-lg sm:rounded-t-xl sm:border md:py-4">
-          <PromptForm input={input} setInput={setInput} />
-          <FooterText className="hidden sm:block" />
+              {messages.map((message, index) => (
+                <UserMessage key={index} message={message} />
+              ))}
+
+              {shareDialogOpen ? (
+                <ChatShareDialog
+                  id={id!}
+                  title={title!}
+                  open={shareDialogOpen}
+                  setOpen={setShareDialogOpen}
+                  shareChatMutation={shareChat}
+                />
+              ) : null}
+            </div>
+          ) : (
+            <div className="mt-6 flex justify-center px-4 text-center text-sm text-muted-foreground sm:px-0">
+              {id ? (
+                <span className="block">Type a message or click the dice to get a random question.</span>
+              ) : (
+                <div className="flex items-center">
+                  <span className="block">Type a message or click the dice to get a random question.</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

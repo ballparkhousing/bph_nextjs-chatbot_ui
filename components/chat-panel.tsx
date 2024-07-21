@@ -51,7 +51,7 @@ export function ChatPanel({
   const [showMap, setShowMap] = React.useState(false);
   const [mapCoords, setMapCoords] = React.useState<{ lat: number; lng: number } | null>(null);
   const [drawnShape, setDrawnShape] = React.useState(null);
-  const [polygonCoords, setPolygonCoords] = React.useState<Array<Array<{ lat: number; lng: number }>> | null>(null);
+  const [polygonCoords, setPolygonCoords] = React.useState<Array<{ lat: number; lng: number }>>(null);
 
   const initialScenarioSelection = [
     {
@@ -119,40 +119,31 @@ export function ChatPanel({
 
     // Check if the selected option corresponds to city infill, and set multipolygon coordinates
     if (option === 'CITY_INFILL') {
-      setPolygonCoords([
+      setPolygonCoords(
         // Replace with your actual multipolygon coordinates for city infill
         [
           { lat: 53.55, lng: -113.48 },
           { lat: 53.52, lng: -113.51 },
           { lat: 53.55, lng: -113.6 },
           { lat: 53.55, lng: -113.5 },
-        ],
-        [
           { lat: 53.46, lng: -113.38 },
           { lat: 53.51, lng: -113.52 },
           { lat: 53.53, lng: -113.5 },
           { lat: 53.51, lng: -113.62 },
-        ],
-        [
           { lat: 53.53, lng: -113.5 },
           { lat: 53.54, lng: -113.42 },
           { lat: 53.44, lng: -113.41 },
           { lat: 53.56, lng: -113.51 },
-        ],
-        [
           { lat: 53.55, lng: -113.53 },
           { lat: 53.52, lng: -113.51 },
           { lat: 53.44, lng: -113.57 },
           { lat: 53.59, lng: -113.53 },
           { lat: 53.54, lng: -113.48 },
-        ],
-        [
           { lat: 53.47, lng: -113.4 },
           { lat: 53.46, lng: -113.4 },
           { lat: 53.58, lng: -113.46 },
           { lat: 53.54, lng: -113.59 },
-        ],
-        [{ lat: 53.6, lng: -113.39 }],
+          { lat: 53.6, lng: -113.39 }
       ]);
     } else {
       setPolygonCoords(null);

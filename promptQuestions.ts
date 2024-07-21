@@ -185,19 +185,11 @@ export const promptQuestion: PromptQuestion = {
           {
             id: "where_to_build",
             question: "WHERE DO YOU WANT TO BUILD?",
-            options: ["CITY INFILL", "SUBURBS"],
-            // next: {
-            //   default: "map",
-            // },
-          },
-          // {
-          //   id: "map",
-          //   question: "Drag and Zoom The Area You Want To Live",
-          //   options: ["Next"],
-          //   next: {
-              
-          //   },
-          // },
+            options: ["CITY_INFILL", "SUBURBS"],
+            next: {
+              default: "map",
+            },
+          }
         ],
       },
     ],

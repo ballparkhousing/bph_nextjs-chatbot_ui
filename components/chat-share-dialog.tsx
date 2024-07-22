@@ -66,6 +66,7 @@ export function ChatShareDialog({
           <Button
             disabled={isSharePending}
             onClick={() => {
+              // @ts-ignore
               startShareTransition(async () => {
                 const result = await shareChat(chat.id)
 

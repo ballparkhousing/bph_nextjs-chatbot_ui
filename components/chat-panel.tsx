@@ -8,12 +8,11 @@ import { IconShare } from '@/components/ui/icons';
 import { FooterText } from '@/components/footer';
 import { ChatShareDialog } from '@/components/chat-share-dialog';
 import { useAIState, useActions, useUIState } from 'ai/rsc';
-import type { AI } from '@/lib/chat/actions';
+import { AI } from '@/lib/chat/actions';
 import { nanoid } from 'nanoid';
 import { UserMessage } from './stocks/message';
 import { promptQuestion, Question, Scenario } from '@/promptQuestions';
 import { searchRental } from '@/lib/rental';
-import { Message } from '@/lib/types';
 
 export interface ChatPanelProps {
   id?: string;
@@ -42,7 +41,7 @@ export function ChatPanel({
   scrollToBottom,
 }: ChatPanelProps) {
   const [aiState] = useAIState();
-  const [messages, setMessages] = useUIState<Message[]>(); // Ensure messages is typed as Message[]
+  const [messages, setMessages] = useUIState<typeof AI>();
   const { submitUserMessage } = useActions();
   const [shareDialogOpen, setShareDialogOpen] = React.useState(false);
   const [currentQuestionId, setCurrentQuestionId] = React.useState('');
@@ -242,35 +241,29 @@ export function ChatPanel({
         {loading && <p>Loading...</p>}
 
         <div className="pb-[150px] pt-4 sm:pb-[90px]">
-          {messages.length > 0 ? (
+          {messages.length > 0 && (
             <div className="px-4 sm:px-0">
-              {id && (
-                <div className="flex w-full items-center justify-center pb-4 pt-2">
+              {id && title ? (
+                <>
                   <Button
                     variant="outline"
-                    className="border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-black"
                     onClick={() => setShareDialogOpen(true)}
                   >
-                    <IconShare className="mr-2 size-4" />
+                    <IconShare className="mr-2" />
                     Share
                   </Button>
-                </div>
-              )}
-
-              {messages.map((message, index) => (
-                <UserMessage key={index}>
-                  {message.display}
-                </UserMessage>
-              ))}
-
-              {shareDialogOpen ? (
-                <ChatShareDialog
-                  chat={{ id, title, messages }}
-                  open={shareDialogOpen}
-                  onOpenChange={setShareDialogOpen}
-                  shareChat={shareChat}
-                  onCopy={() => console.log('Link copied!')}
-                />
+                  <ChatShareDialog
+                    open={shareDialogOpen}
+                    onOpenChange={setShareDialogOpen}
+                    onCopy={() => setShareDialogOpen(false)}
+                    shareChat={shareChat}
+                    chat={{
+                      id,
+                      title,
+                      messages: aiState.messages
+                    }}
+                  />
+                </>
               ) : null}
 
               {/* Display rental results one by one */}
@@ -297,19 +290,13 @@ export function ChatPanel({
               ))}
               {loading && <p>Loading...</p>}
             </div>
-          ) : (
-            <div className="mt-6 flex justify-center px-4 text-center text-sm text-muted-foreground sm:px-0">
-              {id ? (
-                <span className="block">Type a message or click the dice to get a random question.</span>
-              ) : (
-                <div className="flex items-center">
-                  <span className="block">Type a message or click the dice to get a random question.</span>
-                </div>
-              )}
-            </div>
           )}
         </div>
+        <div className="space-y-4 border-t bg-background px-4 py-2 shadow-lg sm:rounded-t-xl sm:border md:py-4">
+          <PromptForm input={input} setInput={setInput} />
+        </div>
       </div>
+      <FooterText className="hidden sm:block" />
     </div>
   );
 }

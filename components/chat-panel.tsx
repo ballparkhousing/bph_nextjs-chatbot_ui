@@ -92,7 +92,7 @@ export function ChatPanel({
     try {
       setLoading(true); // Set loading to true when request starts
       console.log('Sending request:', responses);
-      let data;
+      let data: any;
       if (responses.scenario === 'renter') {
         data = await searchRenter(JSON.stringify(responses));
       } else {

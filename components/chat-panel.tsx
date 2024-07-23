@@ -12,7 +12,8 @@ import { AI } from '@/lib/chat/actions';
 import { nanoid } from 'nanoid';
 import { UserMessage } from './stocks/message';
 import { promptQuestion, Question, Scenario } from '@/promptQuestions';
-import { searchRental } from '@/lib/rental';
+import { searchRenter } from '@/lib/renter';
+import { searchBuilder } from '@/lib/builder';
 
 export interface ChatPanelProps {
   id?: string;
@@ -54,6 +55,8 @@ export function ChatPanel({
   const [rentalResults, setRentalResults] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(false);
 
+  const exampleMessages: any[] = [];
+
   const initialScenarioSelection = [
     {
       scenario: 'renter',
@@ -88,17 +91,52 @@ export function ChatPanel({
   const sendRequest = async (responses: any) => {
     try {
       setLoading(true); // Set loading to true when request starts
-      const data = await searchRental(JSON.stringify(responses));
-      setRentalResults(data.results); // Set the results in state
-      console.log('Rental Results:', data.results);
+      console.log('Sending request:', responses);
+      let data;
+      if (responses.scenario === 'renter') {
+        data = await searchRenter(JSON.stringify(responses));
+      } else {
+        data = await searchBuilder(JSON.stringify(responses));
+      }
+  
+      setMessages((currentMessages: any[]) => [
+        ...currentMessages,
+        ...data.results.map((result: any) =>({
+          id: nanoid(),
+          display: (
+            <div className="mb-4 border rounded-lg p-4">
+              <GoogleMapComponent
+                key={nanoid()}
+                lat={parseFloat(result.latitude)}
+                lng={parseFloat(result.longitude)}
+                zoom={15}
+                onShapeComplete={setDrawnShape}
+                polygonCoords={polygonCoords}
+              />
+              <div className="mt-4">
+                <h3 className="text-lg font-semibold">{result.recommendation_summary}</h3>
+                <p className="text-sm">Type: {result.type}</p>
+                <p className="text-sm">Price: {result.price}</p>
+                <p className="text-sm">Address: {result.address}</p>
+                {result.photos && result.photos.length > 0 && result.photos.map((photo: string | undefined, index: number) => (
+                  <img key={index} src={photo} alt="Property" className="mt-2 rounded-lg" width={200} />
+                ))}
+              </div>
+            </div>
+          )
+        }))
+      ]);
     } catch (error) {
       console.error('Failed to fetch rental results:', error);
     } finally {
       setLoading(false); // Set loading to false when request completes
+      setCurrentScenario('');
     }
   };
+  
+  
 
-  const handleOptionChange = (questionId: string, option: string) => {
+  const handleOptionChange = async (questionId: string, option: string) => {
     const scenario: Scenario = promptQuestion[currentScenario].scenarios[0];
     const question = scenario.questions.find((question: Question) => question.id === questionId);
 
@@ -121,7 +159,7 @@ export function ChatPanel({
 
     // Save the responses to a JSON file if the next question is "map"
     if (nextQuestionId === 'map') {
-      sendRequest(updatedAnswers);
+      await sendRequest(updatedAnswers);
     }
 
     // Check if the selected option corresponds to a location
@@ -216,82 +254,64 @@ export function ChatPanel({
           </>
         )}
 
-        {/* Display rental results one by one */}
-        {rentalResults.length > 0 && rentalResults.map((result, index) => (
-          <div key={index} className="mb-4 border rounded-lg p-4">
-            <GoogleMapComponent
-              lat={parseFloat(result.latitude)}
-              lng={parseFloat(result.longitude)}
-              zoom={15}
-              onShapeComplete={setDrawnShape}
-              polygonCoords={polygonCoords}
-            />
-            <div className="mt-4">
-              <h3 className="text-lg font-semibold">{result.recommendation_summary}</h3>
-              <p className="text-sm">Type: {result.type}</p>
-              <p className="text-sm">Price: {result.price}</p>
-              <p className="text-sm">Address: {result.address}</p>
-              {result.photos.length > 0 &&  result.photos.map((photo: string | undefined, index: any) => (
-                // eslint-disable-next-line @next/next/no-img-element, react/jsx-key
-                <img src={photo} alt="Property" className="mt-2 rounded-lg" width="200" />
-              ))}
-            </div>
-          </div>
-        ))}
-        {loading && <p>Loading...</p>}
+          <div className="mx-auto sm:max-w-2xl sm:px-4">
+            <div className="mb-4 grid grid-cols-2 gap-2 px-4 sm:px-0">
+              {messages.length === 0 &&
+                exampleMessages.map((example, index) => (
+                  <div
+                    key={example.heading}
+                    className={`cursor-pointer rounded-lg border bg-white p-4 hover:bg-zinc-50 dark:bg-zinc-950 dark:hover:bg-zinc-900`}
+                    onClick={async () => {
+                      setMessages((currentMessages: any) => [
+                        ...currentMessages,
+                        {
+                          id: nanoid(),
+                          display: <UserMessage>{example.message}</UserMessage>
+                        }
+                      ]);
 
-        <div className="pb-[150px] pt-4 sm:pb-[90px]">
-          {messages.length > 0 && (
-            <div className="px-4 sm:px-0">
-              {id && title ? (
-                <>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShareDialogOpen(true)}
-                  >
-                    <IconShare className="mr-2" />
-                    Share
-                  </Button>
-                  <ChatShareDialog
-                    open={shareDialogOpen}
-                    onOpenChange={setShareDialogOpen}
-                    onCopy={() => setShareDialogOpen(false)}
-                    shareChat={shareChat}
-                    chat={{
-                      id,
-                      title,
-                      messages: aiState.messages
+                      const responseMessage = await submitUserMessage(example.message);
+
+                      setMessages((currentMessages: any) => [
+                        ...currentMessages,
+                        responseMessage
+                      ]);
                     }}
-                  />
-                </>
-              ) : null}
-
-              {/* Display rental results one by one */}
-              {rentalResults.length > 0 && rentalResults.map((result, index) => (
-                <div key={index} className="mb-4 border rounded-lg p-4">
-                  <GoogleMapComponent
-                    lat={parseFloat(result.latitude)}
-                    lng={parseFloat(result.longitude)}
-                    zoom={15}
-                    onShapeComplete={setDrawnShape}
-                    polygonCoords={polygonCoords}
-                  />
-                  <div className="mt-4">
-                    <h3 className="text-lg font-semibold">{result.recommendation_summary}</h3>
-                    <p className="text-sm">Type: {result.type}</p>
-                    <p className="text-sm">Price: {result.price}</p>
-                    <p className="text-sm">Address: {result.address}</p>
-                    {result.photos.length > 0 && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={result.photos[0]} alt="Property" className="mt-2 rounded-lg" width="200" />
-                    )}
+                  >
+                    <div className="text-sm font-semibold">{example.heading}</div>
+                    <div className="text-sm text-zinc-600">{example.subheading}</div>
                   </div>
-                </div>
-              ))}
-              {loading && <p>Loading...</p>}
+                ))}
             </div>
-          )}
-        </div>
+
+            {messages?.length >= 2 ? (
+              <div className="flex h-12 items-center justify-center">
+                <div className="flex space-x-2">
+                  {id && title ? (
+                    <>
+                      <Button variant="outline" onClick={() => setShareDialogOpen(true)}>
+                        <IconShare className="mr-2" />
+                        Share
+                      </Button>
+                      <ChatShareDialog
+                        open={shareDialogOpen}
+                        onOpenChange={setShareDialogOpen}
+                        onCopy={() => setShareDialogOpen(false)}
+                        shareChat={shareChat}
+                        chat={{
+                          id,
+                          title,
+                          messages: aiState.messages
+                        }}
+                      />
+                    </>
+                  ) : null}
+                </div>
+              </div>
+            ) : null}
+
+            {loading && <p>Loading...</p>}
+          </div>
         <div className="space-y-4 border-t bg-background px-4 py-2 shadow-lg sm:rounded-t-xl sm:border md:py-4">
           <PromptForm input={input} setInput={setInput} />
         </div>

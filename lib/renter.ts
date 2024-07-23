@@ -1,8 +1,8 @@
 // lib/rental.ts
 import api from './api';
-export const searchRental = async (query: string) => {
+export const searchRenter = async (query: string) => {
   try {
-    const response = await api.post('/rental/search', null, {
+    const response = await api.post('/renter/search', null, {
       params: { query },
     });
     return response.data;

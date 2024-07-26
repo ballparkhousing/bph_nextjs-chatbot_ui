@@ -273,9 +273,9 @@ export function ChatPanel({
 
         {answers?.scenario === 'builder' && messages.length > 0 && !loading && (
           <div className='grid lg:grid-cols-3 sm:grid-cols-2 grid-cols-1 gap-2'>
-            <Button className='bg-white text-black py-2'>Apply For Rezoning</Button>
-            <Button className='bg-white text-black py-2'>Apply For Building Permit</Button>
-            <Button className='bg-white text-black py-2'>Apply For Development Permit</Button>
+            <Button className='bg-white hover:bg-zinc-50 text-black py-2'>Apply For Rezoning</Button>
+            <Button className='bg-white hover:bg-zinc-50 text-black py-2'>Apply For Building Permit</Button>
+            <Button className='bg-white hover:bg-zinc-50 text-black py-2'>Apply For Development Permit</Button>
           </div>
         )}
 

@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useState, useEffect } from 'react';
-import { GoogleMap, LoadScript, Marker, DrawingManager } from '@react-google-maps/api';
+import { GoogleMap, useJsApiLoader, Marker, DrawingManager } from '@react-google-maps/api';
 
 interface GoogleMapComponentProps {
   lat: number;
@@ -19,6 +19,11 @@ const GoogleMapComponent: React.FC<GoogleMapComponentProps> = ({ lat, lng, zoom,
   const [mapLoaded, setMapLoaded] = useState(false);
   const [drawnShapes, setDrawnShapes] = useState<any[]>([]);
   const [googleMapsApi, setGoogleMapsApi] = useState<typeof google | null>(null);
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-api',
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
+    libraries: ['drawing']
+  })
 
   const onLoad = useCallback((map: google.maps.Map) => {
     mapRef.current = map;
@@ -44,68 +49,65 @@ const GoogleMapComponent: React.FC<GoogleMapComponentProps> = ({ lat, lng, zoom,
     }
   };
 
-  return (
-    <LoadScript
-      googleMapsApiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''}
-      libraries={['drawing']}
-    >
+  if (isLoaded) {
+    return (
       <GoogleMap
-        mapContainerStyle={containerStyle}
-        center={{ lat, lng }}
-        zoom={zoom}
-        onLoad={onLoad}
-        onUnmount={onUnmount}
-      >
-        <Marker position={{ lat, lng }} />
-        {mapLoaded && (
-          <>
-            {polygonCoords && polygonCoords.map((coord, index) => (
-              <Marker
-                key={index}
-                position={coord}
-              />
-            ))}
-          </>
-        )}
+      mapContainerStyle={containerStyle}
+      center={{ lat, lng }}
+      zoom={zoom}
+      onLoad={onLoad}
+      onUnmount={onUnmount}
+    >
+      <Marker position={{ lat, lng }} />
+      {mapLoaded && (
+        <>
+          {polygonCoords && polygonCoords.map((coord, index) => (
+            <Marker
+              key={index}
+              position={coord}
+            />
+          ))}
+        </>
+      )}
 
-        {drawnShapes.map((shape, index) => {
-          if (shape.type === 'rectangle') {
-            const bounds = shape.bounds;
-            const ne = bounds.getNorthEast();
-            const sw = bounds.getSouthWest();
-            return (
-              <React.Fragment key={index}>
-                <Marker position={{ lat: ne.lat(), lng: ne.lng() }} />
-                <Marker position={{ lat: sw.lat(), lng: sw.lng() }} />
-              </React.Fragment>
-            );
-          } else if (shape.type === 'circle') {
-            const center = shape.center;
-            return (
-              <Marker key={index} position={{ lat: center.lat(), lng: center.lng() }} />
-            );
-          }
-          return null;
-        })}
+      {drawnShapes.map((shape, index) => {
+        if (shape.type === 'rectangle') {
+          const bounds = shape.bounds;
+          const ne = bounds.getNorthEast();
+          const sw = bounds.getSouthWest();
+          return (
+            <React.Fragment key={index}>
+              <Marker position={{ lat: ne.lat(), lng: ne.lng() }} />
+              <Marker position={{ lat: sw.lat(), lng: sw.lng() }} />
+            </React.Fragment>
+          );
+        } else if (shape.type === 'circle') {
+          const center = shape.center;
+          return (
+            <Marker key={index} position={{ lat: center.lat(), lng: center.lng() }} />
+          );
+        }
+        return null;
+      })}
 
-        {googleMapsApi && (
-          <DrawingManager
-            onOverlayComplete={handleOverlayComplete}
-            options={{
-              drawingControl: true,
-              drawingControlOptions: {
-                position: googleMapsApi.maps.ControlPosition.TOP_CENTER,
-                drawingModes: [
-                  googleMapsApi.maps.drawing.OverlayType.CIRCLE,
-                  googleMapsApi.maps.drawing.OverlayType.RECTANGLE,
-                ],
-              },
-            }}
-          />
-        )}
-      </GoogleMap>
-    </LoadScript>
-  );
+      {googleMapsApi && (
+        <DrawingManager
+          onOverlayComplete={handleOverlayComplete}
+          options={{
+            drawingControl: true,
+            drawingControlOptions: {
+              position: googleMapsApi.maps.ControlPosition.TOP_CENTER,
+              drawingModes: [
+                googleMapsApi.maps.drawing.OverlayType.CIRCLE,
+                googleMapsApi.maps.drawing.OverlayType.RECTANGLE,
+              ],
+            },
+          }}
+        />
+      )}
+    </GoogleMap>
+    )
+  }
 };
 
 export default GoogleMapComponent;

@@ -124,6 +124,7 @@ export function ChatPanel({
           <p className="text-sm">Type: {result.type}</p>
           <p className="text-sm">Price: {result.price}</p>
           <p className="text-sm">Address: {result.address}</p>
+          <p className="text-sm">Utilities: {result.utilities || ''}</p>
           {result.photos && result.photos.length > 0 && result.photos.map((photo: string | undefined, index: number) => (
             <img key={index} src={photo} alt="Property" className="mt-2 rounded-lg" width={200} />
           ))}

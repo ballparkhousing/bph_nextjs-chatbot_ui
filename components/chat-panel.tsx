@@ -104,33 +104,35 @@ export function ChatPanel({
         data = await searchBuilder(JSON.stringify(req));
       }
   
-      setMessages((currentMessages: any[]) => [
-        ...currentMessages,
-        ...data.results.map((result: any) =>({
-          id: nanoid(),
-          display: (
-            <div className="mb-4 border rounded-lg p-4">
-              <GoogleMapComponent
-                key={nanoid()}
-                lat={parseFloat(result.latitude)}
-                lng={parseFloat(result.longitude)}
-                zoom={15}
-                onShapeComplete={setDrawnShape}
-                polygonCoords={polygonCoords}
-              />
-              <div className="mt-4">
-                <h3 className="text-lg font-semibold">{result.recommendation_summary}</h3>
-                <p className="text-sm">Type: {result.type}</p>
-                <p className="text-sm">Price: {result.price}</p>
-                <p className="text-sm">Address: {result.address}</p>
-                {result.photos && result.photos.length > 0 && result.photos.map((photo: string | undefined, index: number) => (
-                  <img key={index} src={photo} alt="Property" className="mt-2 rounded-lg" width={200} />
-                ))}
-              </div>
+      if (data.results.length > 0) {
+        setMessages((currentMessages: any[]) => [
+          ...currentMessages,
+          ...data.results.map((result: any) =>({
+        id: nanoid(),
+        display: (
+          <div className="mb-4 border rounded-lg p-4">
+            <GoogleMapComponent
+          key={nanoid()}
+          lat={parseFloat(result.latitude)}
+          lng={parseFloat(result.longitude)}
+          zoom={15}
+          onShapeComplete={setDrawnShape}
+          polygonCoords={polygonCoords}
+            />
+            <div className="mt-4">
+          <h3 className="text-lg font-semibold">{result.recommendation_summary}</h3>
+          <p className="text-sm">Type: {result.type}</p>
+          <p className="text-sm">Price: {result.price}</p>
+          <p className="text-sm">Address: {result.address}</p>
+          {result.photos && result.photos.length > 0 && result.photos.map((photo: string | undefined, index: number) => (
+            <img key={index} src={photo} alt="Property" className="mt-2 rounded-lg" width={200} />
+          ))}
             </div>
-          )
-        }))
-      ]);
+          </div>
+        )
+          }))
+        ]);
+      }
     } catch (error) {
       console.error('Failed to fetch rental results:', error);
     } finally {
@@ -289,7 +291,7 @@ export function ChatPanel({
                 ))}
             </div>
 
-            {messages?.length >= 2 ? (
+            {/* {messages?.length >= 2 ? (
               <div className="flex h-12 items-center justify-center">
                 <div className="flex space-x-2">
                   {id && title ? (
@@ -313,7 +315,7 @@ export function ChatPanel({
                   ) : null}
                 </div>
               </div>
-            ) : null}
+            ) : null} */}
 
             {loading && <p>Loading...</p>}
           </div>

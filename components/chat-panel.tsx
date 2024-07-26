@@ -14,6 +14,7 @@ import { UserMessage } from './stocks/message';
 import { promptQuestion, Question, Scenario } from '@/promptQuestions';
 import { searchRenter } from '@/lib/renter';
 import { searchBuilder } from '@/lib/builder';
+import SkeletonLoader from './ui/skeleton-loader';
 
 export interface ChatPanelProps {
   id?: string;
@@ -47,7 +48,7 @@ export function ChatPanel({
   const [shareDialogOpen, setShareDialogOpen] = React.useState(false);
   const [currentQuestionId, setCurrentQuestionId] = React.useState('');
   const [currentScenario, setCurrentScenario] = React.useState<string>('');
-  const [answers, setAnswers] = React.useState({});
+  const [answers, setAnswers] = React.useState<{scenario?: string}>({});
   const [showMap, setShowMap] = React.useState(false);
   const [mapCoords, setMapCoords] = React.useState<{ lat: number; lng: number } | null>(null);
   const [drawnShape, setDrawnShape] = React.useState(null);
@@ -104,13 +105,15 @@ export function ChatPanel({
         data = await searchBuilder(JSON.stringify(req));
       }
   
+      console.log(data.results);
+
       if (data.results.length > 0) {
         setMessages((currentMessages: any[]) => [
           ...currentMessages,
           ...data.results.map((result: any) =>({
         id: nanoid(),
         display: (
-          <div className="mb-4 border rounded-lg p-4">
+          <div className="mb-4 overflow-scroll max-h-[30rem] border rounded-lg p-4">
             <GoogleMapComponent
           key={nanoid()}
           lat={parseFloat(result.latitude)}
@@ -124,7 +127,7 @@ export function ChatPanel({
           <p className="text-sm">Type: {result.type}</p>
           <p className="text-sm">Price: {result.price}</p>
           <p className="text-sm">Address: {result.address}</p>
-          <p className="text-sm">Utilities: {result.utilities || ''}</p>
+          <p className="text-sm">Utilities: {result.utilities.length > 0 || 'Power unavailable, Water available'}</p>
           {result.photos && result.photos.length > 0 && result.photos.map((photo: string | undefined, index: number) => (
             <img key={index} src={photo} alt="Property" className="mt-2 rounded-lg" width={200} />
           ))}
@@ -167,6 +170,10 @@ export function ChatPanel({
 
     // Save the responses to a JSON file if the next question is "map"
     if (nextQuestionId === 'map') {
+      if (messages.length > 0) {
+        setMessages([]);
+      }
+
       await sendRequest(updatedAnswers);
     }
 
@@ -238,8 +245,10 @@ export function ChatPanel({
     <div className="fixed inset-x-0 bottom-0 w-full bg-gradient-to-b from-muted/30 from-0% to-muted/30 to-50% duration-300 ease-in-out animate-in dark:from-background/10 dark:from-10% dark:to-background/80 peer-[[data-state=open]]:group-[]:lg:pl-[250px] peer-[[data-state=open]]:group-[]:xl:pl-[300px]">
       <ButtonScrollToBottom isAtBottom={isAtBottom} scrollToBottom={scrollToBottom} />
 
+      {loading && <SkeletonLoader />}
+
       <div className="mx-auto sm:max-w-2xl sm:px-4">
-        <div className={`${currentScenario.length !== 0 && 'hidden'} mb-4 grid grid-cols-2 gap-2 px-4 sm:px-0`}>
+        <div className={`${(messages.length > 0 || currentScenario.length !== 0) && 'hidden'} mb-4 grid grid-cols-2 gap-2 px-4 sm:px-0`}>
           {initialScenarioSelection.map(({ scenario, heading, subheading }) => (
             <div
               key={scenario}
@@ -260,6 +269,14 @@ export function ChatPanel({
           <>
             <div>{renderQuestions(promptQuestion[currentScenario].scenarios[0].questions, currentQuestionId)}</div>
           </>
+        )}
+
+        {answers?.scenario === 'builder' && messages.length > 0 && !loading && (
+          <div className='grid lg:grid-cols-3 sm:grid-cols-2 grid-cols-1 gap-2'>
+            <Button className='bg-white text-black py-2'>Apply For Rezoning</Button>
+            <Button className='bg-white text-black py-2'>Apply For Building Permit</Button>
+            <Button className='bg-white text-black py-2'>Apply For Development Permit</Button>
+          </div>
         )}
 
           <div className="mx-auto sm:max-w-2xl sm:px-4">
@@ -317,12 +334,7 @@ export function ChatPanel({
                 </div>
               </div>
             ) : null} */}
-
-            {loading && <p>Loading...</p>}
           </div>
-        <div className="space-y-4 border-t bg-background px-4 py-2 shadow-lg sm:rounded-t-xl sm:border md:py-4">
-          <PromptForm input={input} setInput={setInput} />
-        </div>
       </div>
       <FooterText className="hidden sm:block" />
     </div>

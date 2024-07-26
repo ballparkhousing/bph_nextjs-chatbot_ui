@@ -94,9 +94,14 @@ export function ChatPanel({
       console.log('Sending request:', responses);
       let data: any;
       if (responses.scenario === 'renter') {
-        data = await searchRenter(JSON.stringify(responses));
+        let req: { [key: string]: any } = JSON.parse(JSON.stringify(responses));
+        req['listing_type'] = 'residential';
+        data = await searchRenter(JSON.stringify(req));
       } else {
-        data = await searchBuilder(JSON.stringify(responses));
+        let req: { [key: string]: any } = JSON.parse(JSON.stringify(responses));
+        req['building_type'] = req['what_to_build'];
+        req['location_type'] = req['where_to_build'];
+        data = await searchBuilder(JSON.stringify(req));
       }
   
       setMessages((currentMessages: any[]) => [

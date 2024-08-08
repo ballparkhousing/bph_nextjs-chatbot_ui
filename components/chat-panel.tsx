@@ -15,6 +15,16 @@ import { promptQuestion, Question, Scenario } from '@/promptQuestions';
 import { searchRenter } from '@/lib/renter';
 import { searchBuilder } from '@/lib/builder';
 import SkeletonLoader from './ui/skeleton-loader';
+import { Input } from "@/components/ui/input"
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export interface ChatPanelProps {
   id?: string;
@@ -48,6 +58,8 @@ export function ChatPanel({
   const [shareDialogOpen, setShareDialogOpen] = React.useState(false);
   const [currentQuestionId, setCurrentQuestionId] = React.useState('');
   const [currentScenario, setCurrentScenario] = React.useState<string>('');
+  const [workAddress, setWorkAddress] = React.useState<string>('');
+  const [loanAmount, setLoanAmount] = React.useState<string>('');
   const [answers, setAnswers] = React.useState<{scenario?: string}>({});
   const [showMap, setShowMap] = React.useState(false);
   const [mapCoords, setMapCoords] = React.useState<{ lat: number; lng: number } | null>(null);
@@ -222,6 +234,44 @@ export function ChatPanel({
     if (!questionObj) return;
 
     const { question, options } = questionObj;
+    if (questionObj.id === "where_do_you_work"){
+      return (
+        <div className=" flex items-center space-x-2 mb-4">
+          <Input onChange={(event) => setWorkAddress(event.target.value)} type="text" placeholder="Enter Address" />
+          <Button onClick={() => handleOptionChange(questionId, workAddress)} className='bg-white hover:bg-zinc-50 text-black py-2'>Submit</Button>
+        </div>
+      )
+    }
+
+    if (questionObj.id === "loan_to_value_ratio"){
+      return (
+        <div className=" flex items-center space-x-2 mb-4">
+          <Input onChange={(event) => setLoanAmount(event.target.value)} type="text" placeholder="Enter the amount you have raised" />
+          <Button onClick={() => handleOptionChange(questionId, loanAmount)} className='bg-white hover:bg-zinc-50 text-black py-2'>Submit</Button>
+        </div>
+      )
+    }
+
+    if (questionObj.id === "where_do_you_want_to_live") {
+      
+      return (
+        <div className='mt-4'>
+          <p className="text-sm mb-2 font-semibold">WHICH NEIGHBOURHOOD DO YOU WANT TO LIVE IN?</p>
+          <Select onValueChange={(value) => handleOptionChange(questionId, value)}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select the neighbourhood you want to live in" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {options.map((option) => (
+                  <SelectItem key={option} value={option}>{option}</SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+      )
+    }
 
     return (
       <div className="mb-4">

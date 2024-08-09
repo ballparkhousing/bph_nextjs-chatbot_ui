@@ -261,7 +261,7 @@ export const promptQuestion: PromptQuestion = {
           {
             id: "loan_to_value_ratio",
             question: "WHAT IS YOUR LOAN-TO-VALUE RATIO?",
-            options: ["Type in Response"],
+            options: [],
             next: {
               default: "map",
             },

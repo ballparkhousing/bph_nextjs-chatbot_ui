@@ -245,10 +245,13 @@ export function ChatPanel({
 
     if (questionObj.id === "loan_to_value_ratio"){
       return (
-        <div className=" flex items-center space-x-2 mb-4">
+        <>
+          <p className="text-sm mb-2 font-semibold">WHAT IS YOUR LOAN-TO-VALUE RATIO?</p>
+          <div className=" flex items-center space-x-2 mb-4">
           <Input onChange={(event) => setLoanAmount(event.target.value)} type="text" placeholder="Enter the amount you have raised" />
           <Button onClick={() => handleOptionChange(questionId, loanAmount)} className='bg-white hover:bg-zinc-50 text-black py-2'>Submit</Button>
         </div>
+        </>
       )
     }
 
